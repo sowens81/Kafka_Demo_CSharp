@@ -1,12 +1,14 @@
-name: Kafka-App1
+name: Kafka_App
+
 on:
   push:
-    branches:
-      - master
+    branches: [ main ]
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ main ]
+
 jobs:
   build:
+
     name: Build
     runs-on: windows-latest
     steps:
