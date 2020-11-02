@@ -1,19 +1,15 @@
 name: Kafka-App
-
 on:
   push:
-    branches: [ main ]
+    branches:
+      - master
   pull_request:
-    branches: [ main ]
-  create:
-    ref_type: tag
-
+    types: [opened, synchronize, reopened]
 jobs:
-    ci-build-test:
-      name: ci-build-test
-      runs-on: windows-latest
-      if: github.event_name != 'release' && github.event.action != 'created'
-      steps:
+  build:
+    name: Build
+    runs-on: windows-latest
+    steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
@@ -36,31 +32,21 @@ jobs:
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 3.1.301ls
-      - name: .Net Core - Install Dependencies
-        run: dotnet restore ./src/App/App.csproj
-      - name: .Net Core - Build Source
-        run: dotnet build ./src/App/App.csproj --configuration Release --no-restore
-      - name: .Net Core - Run Unit-Tests
-        run: dotnet test ./src/App.UnitTests/App.UnitTests.csproj --configuration Release --no-restore --no-build --verbosity normal
-      - name: .Net Core - Generate Coverage Report
-        run: dotnet test ./src/App.UnitTests/App.UnitTests.csproj /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
-      - name: Publish Coverage To coveralls.io
-        uses: coverallsapp/github-action@v1.0.1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./src/App.UnitTests/TestResults/coverage.info
-      - name: .Net Core - Test Code Coverage
-        run: dotnet test ./src/App.UnitTests/App.UnitTests.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"sowens81_Kafka_Demo_CSharp" /o:"sowens81" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=./src/App.UnitTests/coverage.opencover.xml
-          dotnet build ./src/App/App.csproj --configuration Release
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"  
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"sowens81_Kafka_Demo_CSharp" /o:"sowens81" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet restore ./src/App/App.csproj
+          dotnet build ./src/App/App.csproj --configuration Release --no-restore
+          dotnet test ./src/App.UnitTests/App.UnitTests.csproj --configuration Release --no-restore --no-build --verbosity normal
+          dotnet test ./src/App.UnitTests/App.UnitTests.csproj /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+          dotnet test ./src/App.UnitTests/App.UnitTests.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - name: Publish Coverage To coveralls.io
+        uses: coverallsapp/github-action@v1.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ./src/App.UnitTests/TestResults/coverage.info
