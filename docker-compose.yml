@@ -1,0 +1,8 @@
+---
+    version: '2'
+    
+    services:
+      broker:
+        image: spotify/kafka:latest
+        hostname: kafka-broker
+        container_name: kafka-broker
