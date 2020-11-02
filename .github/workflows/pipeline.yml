@@ -61,6 +61,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"sowens81_LabelPromoPool" /o:"sowens81" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=./src/App.UnitTests/coverage.opencover.xml
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"sowens81_Kafka_Demo_CSharp" /o:"sowens81" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=./src/App.UnitTests/coverage.opencover.xml
           dotnet build ./src/App/App.csproj --configuration Release
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"  
